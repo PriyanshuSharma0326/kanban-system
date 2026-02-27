@@ -137,6 +137,8 @@ export default function Board() {
                     >
                         + Add Column
                     </button>
+
+                    <div className="size-12 shrink-0 bg-transparent"></div>
                 </div>
             </SortableContext>
 

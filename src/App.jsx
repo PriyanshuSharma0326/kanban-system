@@ -8,7 +8,7 @@ import TaskPanel from "./components/board/TaskPanel";
 import AuthPage from "./pages/auth/AuthPage";
 import Board from "./components/board/Board";
 import Dashboard from "./pages/Dashboard";
-import SearchPage   from "./pages/search/SearchPage";
+import SearchPage from "./pages/search/SearchPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import Header from "./components/layout/Header";
 
@@ -61,11 +61,11 @@ export default function App() {
                         ? "overflow-x-auto overflow-y-hidden p-4 md:p-6"
                         : "overflow-y-auto overflow-x-hidden px-4 pb-24 pt-4 md:px-6 md:pb-6 md:pt-6"
                 }`}>
-                    {current === ROUTES.BOARD     && <Board />}
+                    {current === ROUTES.BOARD && <Board />}
 
                     {current === ROUTES.DASHBOARD && <Dashboard />}
 
-                    {current === ROUTES.SEARCH    && <SearchPage />}
+                    {current === ROUTES.SEARCH && <SearchPage />}
 
                     {current === ROUTES.SETTINGS  && <SettingsPage />}
                 </main>
