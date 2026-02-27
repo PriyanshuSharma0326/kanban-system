@@ -10,9 +10,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./services/firebase";
 import { setUser } from "./features/auth/authSlice";
 
-// Listen for Firebase auth state before first render.
-// This fires once immediately with the persisted session (or null),
-// so the app never flashes the login screen for already-signed-in users.
 let rendered = false;
 
 onAuthStateChanged(auth, (firebaseUser) => {
@@ -28,8 +25,6 @@ onAuthStateChanged(auth, (firebaseUser) => {
         )
     );
 
-    // Only mount the React tree once — subsequent auth changes
-    // are handled reactively by the authSlice.
     if (!rendered) {
         rendered = true;
 

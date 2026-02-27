@@ -3,33 +3,35 @@ import { useEffect } from "react";
 import { ROUTES } from "./features/nav/navSlice";
 import { fetchBoard, resetBoard } from "./features/board/boardSlice";
 
-import Rail      from "./components/layout/Rail";
+import Rail from "./components/layout/rail/Rail";
 import TaskPanel from "./components/board/TaskPanel";
-import AuthPage  from "./pages/AuthPage";
+import AuthPage from "./pages/auth/AuthPage";
+import Board from "./components/board/Board";
+import Dashboard from "./pages/Dashboard";
+import SearchPage   from "./pages/search/SearchPage";
+import SettingsPage from "./pages/settings/SettingsPage";
+import Header from "./components/layout/Header";
 
-import Board        from "./components/board/Board";
-import Dashboard    from "./pages/Dashboard";
-import SearchPage   from "./pages/SearchPage";
-import SettingsPage from "./pages/SettingsPage";
-import Header       from "./components/layout/Header";
+import Loading from './assets/Loading.svg';
 
 const PAGE_TITLES = {
-    [ROUTES.BOARD]:     "Kanban Board",
+    [ROUTES.BOARD]: "Kanban Board",
     [ROUTES.DASHBOARD]: "Dashboard",
-    [ROUTES.SEARCH]:    "Search",
-    [ROUTES.SETTINGS]:  "Settings",
+    [ROUTES.SEARCH]: "Search",
+    [ROUTES.SETTINGS]: "Settings",
 };
 
 export default function App() {
-    const dispatch   = useDispatch();
-    const current    = useSelector(state => state.nav.current);
-    const authStatus = useSelector(state => state.auth.status);
-    const user       = useSelector(state => state.auth.user);
+    const dispatch = useDispatch();
+
+    const current = useSelector(state => state.nav.current);
+    const { user, status: authStatus } = useSelector(state => state.auth);
 
     useEffect(() => {
         if (authStatus === "authenticated" && user?.uid) {
             dispatch(fetchBoard(user.uid));
         }
+
         if (authStatus === "unauthenticated") {
             dispatch(resetBoard());
         }
@@ -38,10 +40,7 @@ export default function App() {
     if (authStatus === "idle" || authStatus === "loading") {
         return (
             <div className="h-screen w-screen bg-slate-100 flex items-center justify-center">
-                <svg className="w-6 h-6 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                </svg>
+                <img src={Loading} alt="" className="w-6 h-6 animate-spin text-violet-500" />
             </div>
         );
     }
@@ -57,15 +56,17 @@ export default function App() {
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <Header current={current} PAGE_TITLES={PAGE_TITLES} />
 
-                {/*
-                    Board: scrolls horizontally (columns side by side),
-                           each Column handles its own vertical scroll internally.
-                    Other pages: normal vertical scroll.
-                */}
-                <main className={`flex-1 p-6 ${isBoard ? "overflow-x-auto overflow-y-hidden" : "overflow-y-auto overflow-x-hidden"}`}>
+                <main className={`flex-1 ${
+                    isBoard
+                        ? "overflow-x-auto overflow-y-hidden p-4 md:p-6"
+                        : "overflow-y-auto overflow-x-hidden px-4 pb-24 pt-4 md:px-6 md:pb-6 md:pt-6"
+                }`}>
                     {current === ROUTES.BOARD     && <Board />}
+
                     {current === ROUTES.DASHBOARD && <Dashboard />}
+
                     {current === ROUTES.SEARCH    && <SearchPage />}
+
                     {current === ROUTES.SETTINGS  && <SettingsPage />}
                 </main>
             </div>

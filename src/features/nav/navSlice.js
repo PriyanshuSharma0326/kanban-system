@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Routes available in the app
 export const ROUTES = {
     BOARD:     "board",
     DASHBOARD: "dashboard",

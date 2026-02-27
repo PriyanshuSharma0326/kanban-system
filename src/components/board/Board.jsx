@@ -14,22 +14,23 @@ import {
     saveColumnOrder,
     createColumn,
 } from "../../features/board/boardSlice";
-
+import LoadingIcon from '../../assets/Loading.svg';
 import { useState } from "react";
 
 function customCollision(args) {
     const p = pointerWithin(args);
+
     return p.length > 0 ? p : rectIntersection(args);
 }
 
 export default function Board() {
-    const dispatch    = useDispatch();
-    const uid         = useSelector(state => state.auth.user?.uid);
-    const columns     = useSelector(state => state.board.columns);
-    const columnOrder = useSelector(state => state.board.columnOrder);
-    const status      = useSelector(state => state.board.status);
+    const dispatch = useDispatch();
 
-    const [activeTaskId,   setActiveTaskId]   = useState(null);
+    const uid = useSelector(state => state.auth.user?.uid);
+
+    const { columns, columnOrder, status } = useSelector(state => state.board);
+
+    const [activeTaskId,   setActiveTaskId] = useState(null);
     const [activeColumnId, setActiveColumnId] = useState(null);
 
     const orderedColumns = columnOrder.map(id => columns[id]).filter(Boolean);
@@ -51,50 +52,63 @@ export default function Board() {
     function handleDragEnd({ active, over }) {
         setActiveTaskId(null);
         setActiveColumnId(null);
+
         if (!over || !uid) return;
 
-        // ── Column reorder ──
         if (active.id in columns) {
             if (!(over.id in columns)) return;
+
             const oldIdx = columnOrder.indexOf(active.id);
             const newIdx = columnOrder.indexOf(over.id);
+
             if (oldIdx === newIdx) return;
+
             const newOrder = arrayMove(columnOrder, oldIdx, newIdx);
+
             dispatch(optimisticReorderColumns(newOrder));
             dispatch(saveColumnOrder({ uid, columnOrder: newOrder }));
+
             return;
         }
 
-        // ── Task movement ──
         const sourceCol = findColumnOfTask(active.id);
+
         if (!sourceCol) return;
 
-        // Dropped on column directly (empty column)
         if (over.id in columns) {
             if (sourceCol.id === over.id) return;
+
             const fromTasks = sourceCol.tasks.filter(id => id !== active.id);
             const toTasks   = [...columns[over.id].tasks, active.id];
+
             dispatch(optimisticMoveTask({ fromColumn: sourceCol.id, toColumn: over.id, taskId: active.id, newIndex: toTasks.length - 1 }));
             dispatch(moveTaskThunk({ uid, fromColumn: sourceCol.id, toColumn: over.id, taskId: active.id, fromTasks, toTasks }));
+
             return;
         }
 
-        // Dropped on a task
         const targetCol = findColumnOfTask(over.id);
+
         if (!targetCol) return;
 
         if (sourceCol.id === targetCol.id) {
             const oldIdx = sourceCol.tasks.indexOf(active.id);
             const newIdx = targetCol.tasks.indexOf(over.id);
+
             if (oldIdx === newIdx) return;
+
             const items = arrayMove(sourceCol.tasks, oldIdx, newIdx);
+
             dispatch(optimisticReorderTasks({ columnId: sourceCol.id, items }));
             dispatch(reorderTasksThunk({ uid, columnId: sourceCol.id, items }));
-        } else {
+        }
+        else {
             const newIdx    = targetCol.tasks.indexOf(over.id);
             const fromTasks = sourceCol.tasks.filter(id => id !== active.id);
             const toTasks   = [...targetCol.tasks];
+
             toTasks.splice(newIdx, 0, active.id);
+
             dispatch(optimisticMoveTask({ fromColumn: sourceCol.id, toColumn: targetCol.id, taskId: active.id, newIndex: newIdx }));
             dispatch(moveTaskThunk({ uid, fromColumn: sourceCol.id, toColumn: targetCol.id, taskId: active.id, fromTasks, toTasks }));
         }
@@ -103,10 +117,7 @@ export default function Board() {
     if (status === "loading") {
         return (
             <div className="flex items-center justify-center h-full text-slate-400 text-sm gap-2">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                </svg>
+                <img src={LoadingIcon} alt="" className="w-6 h-6 animate-spin text-violet-500" />
                 Loading your board…
             </div>
         );
@@ -119,6 +130,7 @@ export default function Board() {
                     {orderedColumns.map(column => (
                         <Column key={column.id} columnId={column.id} />
                     ))}
+
                     <button
                         onClick={() => uid && dispatch(createColumn({ uid, order: columnOrder.length }))}
                         className="w-[280px] flex-shrink-0 h-12 rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500 hover:bg-white/40 hover:border-violet-300 hover:text-violet-500 transition-all duration-200"
@@ -130,6 +142,7 @@ export default function Board() {
 
             <DragOverlay>
                 {activeTaskId   ? <div className="rotate-1 opacity-90 scale-105"><TaskCard id={activeTaskId} isDragOverlay /></div> : null}
+
                 {activeColumnId ? <div className="opacity-80 scale-[1.02]"><Column columnId={activeColumnId} isDragOverlay /></div>  : null}
             </DragOverlay>
         </DndContext>

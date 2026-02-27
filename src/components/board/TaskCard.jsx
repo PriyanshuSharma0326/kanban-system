@@ -2,29 +2,24 @@ import { useSelector, useDispatch } from "react-redux";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { openTaskPanel } from "../../features/board/boardSlice";
-
-const labelColors = {
-    Design:      "bg-sky-100 text-sky-600",
-    Development: "bg-emerald-100 text-emerald-600",
-    Marketing:   "bg-pink-100 text-pink-600",
-    General:     "bg-slate-100 text-slate-600",
-};
-
-const priorityColors = {
-    Low:    "bg-emerald-100 text-emerald-600",
-    Medium: "bg-amber-100 text-amber-600",
-    High:   "bg-red-100 text-red-600",
-};
+import { Pencil } from "lucide-react";
+import { labelColors, priorityColors } from "../../utils/constants";
 
 export default function TaskCard({ id, isDragOverlay = false }) {
     const dispatch = useDispatch();
+
     const { tasks, members } = useSelector(state => state.board);
+
     const task = tasks[id];
 
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id,
-        disabled: isDragOverlay,
-    });
+    const { 
+        attributes, 
+        listeners, 
+        setNodeRef, 
+        transform, 
+        transition, 
+        isDragging 
+    } = useSortable({ id, disabled: isDragOverlay, });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -39,37 +34,31 @@ export default function TaskCard({ id, isDragOverlay = false }) {
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? {} : style}
             className={`
-                group relative bg-white rounded-xl shadow-sm
+                group relative bg-white rounded-xl shadow-sm select-none
                 hover:shadow-md hover:-translate-y-0.5
                 transition-all duration-200
                 ${isDragging ? "shadow-lg ring-2 ring-violet-300" : ""}
             `}
         >
             <div className="px-3 pt-2.5 pb-3">
-
-                {/* Single line: [⠿] [title .............. ] [✏] */}
                 <div className="flex items-center gap-1.5">
-
-                    {/* Drag handle — flex-shrink-0, only element with DnD listeners */}
                     <span
                         {...(isDragOverlay ? {} : { ...attributes, ...listeners })}
-                        className="flex-shrink-0 text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing touch-none select-none leading-none"
+                        className="flex-shrink-0 outline-none text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing touch-none select-none leading-none"
                         title="Drag to move"
                     >
                         ⠿
                     </span>
 
-                    {/* Title — grows to fill space, clamps to 1 line, shrinks when pencil appears */}
                     <h3 className="flex-1 min-w-0 text-sm font-medium text-slate-800 truncate">
                         {task.title}
                     </h3>
 
-                    {/* Pencil — flex-shrink-0 so title truncates before this gets squeezed */}
                     {!isDragOverlay && (
                         <button
                             onClick={() => dispatch(openTaskPanel(id))}
                             className="
-                                flex-shrink-0
+                                flex-shrink-0 outline-none
                                 opacity-0 group-hover:opacity-100
                                 h-6 w-6 flex items-center justify-center
                                 rounded-md bg-slate-100 hover:bg-violet-100
@@ -78,31 +67,27 @@ export default function TaskCard({ id, isDragOverlay = false }) {
                             "
                             title="Edit task"
                         >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
+                            <Pencil className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
                     )}
                 </div>
 
-                {/* Description */}
                 {task.description && (
                     <p className="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
                         {task.description}
                     </p>
                 )}
 
-                {/* Label + Priority badges */}
                 <div className="flex gap-1.5 mt-3">
                     <span className={`text-[10px] px-2 py-1 rounded-full font-medium select-none ${labelColors[task.label] ?? "bg-slate-100 text-slate-600"}`}>
                         {task.label}
                     </span>
+
                     <span className={`text-[10px] px-2 py-1 rounded-full font-medium select-none ${priorityColors[task.priority] ?? "bg-slate-100 text-slate-600"}`}>
                         {task.priority}
                     </span>
                 </div>
 
-                {/* Assignees + Due Date */}
                 <div className="flex items-center justify-between mt-3">
                     <div className="flex -space-x-2">
                         {task.assignees?.length > 0
@@ -120,6 +105,7 @@ export default function TaskCard({ id, isDragOverlay = false }) {
                             )
                         }
                     </div>
+
                     <span className={`text-[10px] px-2 py-1 rounded-full font-medium select-none ${
                         task.dueDate ? "bg-amber-50 text-amber-600" : "bg-slate-100 text-slate-400"
                     }`}>

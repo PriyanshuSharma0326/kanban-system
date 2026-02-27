@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useDroppable } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
+import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 import TaskCard from "./TaskCard";
 import ConfirmModal from "../common/ConfirmModal";
@@ -16,30 +15,46 @@ import {
 
 export default function Column({ columnId, isDragOverlay = false }) {
     const dispatch = useDispatch();
-    const uid      = useSelector(state => state.auth.user?.uid);
-    const column   = useSelector(state => state.board.columns[columnId]);
 
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: columnId });
+    const uid = useSelector(state => state.auth.user?.uid);
+    const column = useSelector(state => state.board.columns[columnId]);
+
+    const {
+        attributes, 
+        listeners, 
+        setNodeRef, 
+        transform, 
+        transition, 
+        isDragging 
+    } = useSortable({ id: columnId });
+
     const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
 
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: columnId });
 
-    const [isEditingTitle,    setIsEditingTitle]    = useState(false);
-    const [draftTitle,        setDraftTitle]         = useState("");
-    const [showDeleteConfirm, setShowDeleteConfirm]  = useState(false);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [draftTitle, setDraftTitle] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     if (!column) return null;
 
     function handleTitleBlur() {
         setIsEditingTitle(false);
+
         const trimmed = draftTitle.trim();
+
         if (!trimmed || trimmed === column.title || !uid) return;
+
         dispatch(renameColumnThunk({ uid, columnId, title: trimmed }));
     }
 
     function handleTitleKeyDown(e) {
-        if (e.key === "Enter") e.target.blur();
-        if (e.key === "Escape") setIsEditingTitle(false);
+        if (e.key === "Enter") {
+            e.target.blur();
+        }
+        if (e.key === "Escape") {
+            setIsEditingTitle(false);
+        }
     }
 
     return (
@@ -48,11 +63,11 @@ export default function Column({ columnId, isDragOverlay = false }) {
                 ref={(node) => { if (!isDragOverlay) { setNodeRef(node); setDroppableRef(node); } }}
                 style={isDragOverlay ? {} : style}
                 className={`
-                    w-[280px] flex-shrink-0 rounded-2xl p-3 flex flex-col transition-colors duration-150
+                    w-[80vw] max-w-[300px] sm:w-[260px] md:w-[280px]
+                    flex-shrink-0 rounded-2xl p-3 flex flex-col transition-colors duration-150
                     ${isOver && !isDragOverlay ? "bg-violet-100/70 ring-2 ring-violet-300" : "bg-slate-200/50"}
                 `}
             >
-                {/* Header */}
                 <div className="flex items-center gap-2 mb-3">
                     {!isDragOverlay && (
                         <span
@@ -88,14 +103,17 @@ export default function Column({ columnId, isDragOverlay = false }) {
                     {!isDragOverlay && (
                         <button
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="flex-shrink-0 text-slate-300 hover:text-red-400 transition text-xs"
+                            className="flex-shrink-0 outline-none text-slate-300 hover:text-red-400 transition text-xs"
                             title="Delete column"
                         >✕</button>
                     )}
                 </div>
 
                 <SortableContext items={column.tasks} strategy={verticalListSortingStrategy}>
-                    <div className="flex flex-col gap-3 min-h-[40px] overflow-y-auto max-h-[calc(100vh-220px)] pr-0.5">
+                    <div
+                        className="flex flex-col gap-3 min-h-[40px] overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-220px)] rounded-xl"
+                        style={{ boxShadow: "inset 0 8px 12px -6px rgba(0,0,0,0.06), inset 0 -8px 12px -6px rgba(0,0,0,0.06)" }}
+                    >
                         {column.tasks.length === 0 ? (
                             <div className="text-xs text-slate-400 border border-dashed border-slate-300 rounded-xl p-3 text-center">
                                 Drop tasks here
@@ -106,7 +124,6 @@ export default function Column({ columnId, isDragOverlay = false }) {
                     </div>
                 </SortableContext>
 
-                {/* Add Task */}
                 {!isDragOverlay && (
                     <button
                         onClick={() => dispatch(openTaskPanelForCreate(columnId))}
