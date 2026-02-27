@@ -1,0 +1,44 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+import "./styles/index.css";
+
+import { Provider } from "react-redux";
+import { store } from "./app/store";
+
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./services/firebase";
+import { setUser } from "./features/auth/authSlice";
+
+// Listen for Firebase auth state before first render.
+// This fires once immediately with the persisted session (or null),
+// so the app never flashes the login screen for already-signed-in users.
+let rendered = false;
+
+onAuthStateChanged(auth, (firebaseUser) => {
+    store.dispatch(
+        setUser(
+            firebaseUser
+                ? {
+                    uid:         firebaseUser.uid,
+                    email:       firebaseUser.email,
+                    displayName: firebaseUser.displayName,
+                }
+                : null
+        )
+    );
+
+    // Only mount the React tree once — subsequent auth changes
+    // are handled reactively by the authSlice.
+    if (!rendered) {
+        rendered = true;
+
+        ReactDOM.createRoot(document.getElementById("root")).render(
+            <React.StrictMode>
+                <Provider store={store}>
+                    <App />
+                </Provider>
+            </React.StrictMode>
+        );
+    }
+});
