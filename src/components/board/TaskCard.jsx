@@ -90,27 +90,59 @@ export default function TaskCard({ id, isDragOverlay = false }) {
 
                 <div className="flex items-center justify-between mt-3">
                     <div className="flex -space-x-2">
-                        {task.assignees?.length > 0
-                            ? task.assignees.map(userId => (
-                                <div
-                                    key={userId}
-                                    className={`h-6 w-6 rounded-full border-2 border-white ${members[userId]?.avatarColor ?? "bg-slate-300"} flex-shrink-0`}
-                                    title={members[userId]?.name}
-                                />
-                            ))
-                            : (
-                                <div className="h-6 w-6 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs bg-white">
-                                    +
-                                </div>
-                            )
-                        }
+                        {task.assignees && task.assignees.length > 0 ? (
+                            task.assignees.map(userId => {
+                                const member = members?.[userId];
+
+                                if (!member) return null;
+
+                                const initials = member.name
+                                    ? member.name
+                                        .split(" ")
+                                        .map(w => w[0])
+                                        .join("")
+                                        .toUpperCase()
+                                        .slice(0, 2)
+                                    : "U";
+
+                                const isHex = member.avatarColor?.startsWith("#");
+
+                                return (
+                                    <div
+                                        key={userId}
+                                        className="h-6 w-6 flex items-center justify-center rounded-full border-2 border-white flex-shrink-0 cursor-pointer"
+                                        style={isHex ? { backgroundColor: member.avatarColor } : {}}
+                                        title={member.name || "User"}
+                                    >
+                                        <p className="text-[8px] leading-[8px] font-medium text-white">
+                                            {initials}
+                                        </p>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <button
+                                type="button"
+                                className="h-6 w-6 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs bg-white hover:bg-slate-50 transition"
+                                onClick={() => console.log("Add assignee")}
+                            >
+                                +
+                            </button>
+                        )}
                     </div>
 
-                    <span className={`text-[10px] px-2 py-1 rounded-full font-medium select-none ${
-                        task.dueDate ? "bg-amber-50 text-amber-600" : "bg-slate-100 text-slate-400"
-                    }`}>
+                    <span
+                        className={`text-[10px] px-2 py-1 rounded-full font-medium select-none ${
+                            task.dueDate
+                                ? "bg-amber-50 text-amber-600"
+                                : "bg-slate-100 text-slate-400"
+                        }`}
+                    >
                         {task.dueDate
-                            ? new Date(task.dueDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                            ? new Date(task.dueDate + "T00:00:00").toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                            })
                             : "No Date"}
                     </span>
                 </div>
